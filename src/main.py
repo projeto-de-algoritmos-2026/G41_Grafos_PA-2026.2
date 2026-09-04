@@ -2,6 +2,7 @@ import sys
 
 import pygame
 
+from pathfinding import find_route_to_shelter
 from world import CityMap, Terrain
 
 
@@ -187,6 +188,7 @@ def main() -> None:
     title_font = pygame.font.Font(None, 30)
     font = pygame.font.Font(None, 21)
     city = CityMap(MAP_WIDTH, MAP_HEIGHT)
+    path, path_cost = find_route_to_shelter(city)
 
     running = True
     while running:
@@ -198,6 +200,7 @@ def main() -> None:
                     running = False
                 elif event.key == pygame.K_r:
                     city.regenerate()
+                    path, path_cost = find_route_to_shelter(city)
 
         screen.fill(COLORS["background"])
         draw_map(screen, city, font)
