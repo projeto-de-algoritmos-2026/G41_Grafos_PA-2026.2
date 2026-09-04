@@ -105,6 +105,22 @@ def draw_player(screen: pygame.Surface, center: tuple[int, int]) -> None:
     pygame.draw.line(screen, outline, (x + 3, y + 7), (x + 5, y + 12), 2)
 
 
+def draw_zombie(screen: pygame.Surface, center: tuple[int, int]) -> None:
+    x, y = center
+    outline = (45, 38, 39)
+    skin = (139, 184, 126)
+    pygame.draw.circle(screen, outline, (x, y - 7), 6)
+    pygame.draw.circle(screen, skin, (x, y - 7), 4)
+    pygame.draw.circle(screen, outline, (x - 2, y - 8), 1)
+    pygame.draw.circle(screen, outline, (x + 2, y - 8), 1)
+    pygame.draw.polygon(screen, outline, [(x - 7, y - 1), (x + 7, y - 1), (x + 5, y + 8), (x - 5, y + 8)])
+    pygame.draw.polygon(screen, (105, 61, 71), [(x - 5, y), (x + 5, y), (x + 4, y + 6), (x - 4, y + 6)])
+    pygame.draw.line(screen, outline, (x - 5, y), (x - 10, y + 4), 2)
+    pygame.draw.line(screen, outline, (x + 5, y), (x + 10, y + 4), 2)
+    pygame.draw.line(screen, outline, (x - 3, y + 7), (x - 5, y + 12), 2)
+    pygame.draw.line(screen, outline, (x + 3, y + 7), (x + 5, y + 12), 2)
+
+
 def draw_map(screen: pygame.Surface, city: CityMap, font: pygame.font.Font) -> None:
     for cell in city.cells:
         rectangle = pygame.Rect(cell.x * TILE_SIZE, cell.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
@@ -112,6 +128,14 @@ def draw_map(screen: pygame.Surface, city: CityMap, font: pygame.font.Font) -> N
         pygame.draw.rect(screen, COLORS["grid"], rectangle, 1)
 
         draw_cartoon_icon(screen, cell, rectangle)
+
+    for zombie in city.zombies:
+        zombie_center = (zombie.x * TILE_SIZE + TILE_SIZE // 2, zombie.y * TILE_SIZE + TILE_SIZE // 2)
+        draw_zombie(screen, zombie_center)
+
+    player = city.player_position
+    player_center = (player[0] * TILE_SIZE + TILE_SIZE // 2, player[1] * TILE_SIZE + TILE_SIZE // 2)
+    draw_player(screen, player_center)
 
 def draw_sidebar(screen: pygame.Surface, city: CityMap, title_font: pygame.font.Font, font: pygame.font.Font) -> None:
     left = MAP_WIDTH * TILE_SIZE
@@ -127,6 +151,13 @@ def draw_sidebar(screen: pygame.Surface, city: CityMap, title_font: pygame.font.
     screen.blit(font.render("ESC  sair", True, COLORS["muted"]), (left + 22, y + 52))
 
     y += 96
+    screen.blit(title_font.render("Personagens", True, COLORS["text"]), (left + 22, y))
+    draw_player(screen, (left + 30, y + 35))
+    screen.blit(font.render("Sobrevivente", True, COLORS["text"]), (left + 54, y + 27))
+    draw_zombie(screen, (left + 30, y + 68))
+    screen.blit(font.render("Zumbi", True, COLORS["text"]), (left + 54, y + 60))
+
+    y += 100
     screen.blit(title_font.render("Locais", True, COLORS["text"]), (left + 22, y))
     for place in city.places:
         y += 38

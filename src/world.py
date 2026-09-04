@@ -34,11 +34,19 @@ class Cell:
         return self.terrain.cost
 
 
+@dataclass(frozen=True)
+class Zombie:
+    x: int
+    y: int
+
+
 PLACES = (
+    Place("Abrigo", "A", (224, 92, 76)),
     Place("Hospital", "H", (238, 238, 218)),
     Place("Mercado", "M", (234, 177, 75)),
     Place("Delegacia", "D", (111, 180, 210)),
 )
+ZOMBIE_COUNT = 8
 
 
 class CityMap:
@@ -49,6 +57,7 @@ class CityMap:
         self.cells: list[Cell] = []
         self.places: list[Place] = []
         self.player_position = (0, 0)
+        self.zombies: list[Zombie] = []
         self.generate()
 
     def generate(self) -> None:
@@ -69,6 +78,7 @@ class CityMap:
 
         self._place_locations(generator)
         self.player_position = (0, 0)
+        self._spawn_zombies(generator)
 
     def regenerate(self) -> None:
         self.seed = None
@@ -81,6 +91,17 @@ class CityMap:
 
         for place, cell in zip(self.places, available):
             cell.place = place
+
+    def _spawn_zombies(self, generator: random.Random) -> None:
+        occupied = {self.player_position}
+        occupied.update((cell.x, cell.y) for cell in self.cells if cell.place)
+        available = [
+            cell
+            for cell in self.cells
+            if cell.terrain == Terrain.ROAD and (cell.x, cell.y) not in occupied
+        ]
+        generator.shuffle(available)
+        self.zombies = [Zombie(cell.x, cell.y) for cell in available[:ZOMBIE_COUNT]]
 
     def cell_at(self, x: int, y: int) -> Cell | None:
         if 0 <= x < self.width and 0 <= y < self.height:
