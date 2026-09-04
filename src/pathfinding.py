@@ -68,3 +68,17 @@ def reconstruct_path(
     path = list(reversed(reversed_path))
     total_cost = sum(graph.city.cell_at(*position).danger for position in path[1:])
     return path, total_cost
+
+
+def find_route_to_shelter(city: object) -> tuple[list[Position], int | None]:
+    """Calcula a rota de menor perigo do humano até o abrigo."""
+    shelter_position = city.position_of_place("Abrigo")
+    if shelter_position is None:
+        return [], None
+
+    graph = GridGraph(city)
+    start = city.player_position
+    cost, predecessors = dijkstra(graph, start, shelter_position)
+    if cost is None:
+        return [], None
+    return reconstruct_path(graph, start, shelter_position, predecessors)

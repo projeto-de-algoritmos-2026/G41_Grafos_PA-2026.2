@@ -174,3 +174,10 @@ class CityMap:
         if 0 <= x < self.width and 0 <= y < self.height:
             return self.cells[y * self.width + x]
         return None
+
+    def position_of_place(self, place_name: str) -> tuple[int, int] | None:
+        """Retorna a posição do local com o nome informado, se existir."""
+        for cell in self.cells:
+            if cell.place and cell.place.name == place_name:
+                return cell.position
+        return None

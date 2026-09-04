@@ -7,7 +7,7 @@ SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC_DIR))
 
 from graph import GridGraph
-from pathfinding import dijkstra, reconstruct_path
+from pathfinding import dijkstra, find_route_to_shelter, reconstruct_path
 from world import CityMap
 
 
@@ -60,6 +60,30 @@ class DijkstraTest(unittest.TestCase):
 
         self.assertEqual(path, [])
         self.assertIsNone(total_cost)
+
+    def test_finds_route_from_human_to_shelter(self) -> None:
+        path, total_cost = find_route_to_shelter(self.city)
+        shelter_position = self.city.position_of_place("Abrigo")
+
+        self.assertEqual(path[0], self.city.player_position)
+        self.assertEqual(path[-1], shelter_position)
+        expected_cost = sum(
+            self.city.cell_at(*position).danger for position in path[1:]
+        )
+        self.assertEqual(total_cost, expected_cost)
+
+    def test_shelter_exists_for_multiple_seeds(self) -> None:
+        routes = []
+        for seed in range(10):
+            city = CityMap(5, 5, seed=seed)
+            path, total_cost = find_route_to_shelter(city)
+
+            self.assertIsNotNone(city.position_of_place("Abrigo"))
+            self.assertTrue(path)
+            self.assertIsNotNone(total_cost)
+            routes.append(tuple(path))
+
+        self.assertGreater(len(set(routes)), 1)
 
 
 if __name__ == "__main__":
