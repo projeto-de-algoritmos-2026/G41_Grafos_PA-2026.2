@@ -7,7 +7,7 @@ SRC_DIR = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC_DIR))
 
 from graph import GridGraph
-from pathfinding import dijkstra
+from pathfinding import dijkstra, reconstruct_path
 from world import CityMap
 
 
@@ -38,6 +38,28 @@ class DijkstraTest(unittest.TestCase):
 
         self.assertIsNone(cost)
         self.assertEqual(predecessors, {})
+
+    def test_reconstructs_path_from_start_to_goal(self) -> None:
+        cost, predecessors = dijkstra(self.graph, (0, 0), (2, 0))
+
+        path, total_cost = reconstruct_path(
+            self.graph, (0, 0), (2, 0), predecessors
+        )
+
+        self.assertEqual(path[0], (0, 0))
+        self.assertEqual(path[-1], (2, 0))
+        self.assertEqual(total_cost, cost)
+
+    def test_returns_empty_path_when_goal_has_no_predecessor(self) -> None:
+        path, total_cost = reconstruct_path(
+            self.graph,
+            (0, 0),
+            (2, 2),
+            {(0, 0): None},
+        )
+
+        self.assertEqual(path, [])
+        self.assertIsNone(total_cost)
 
 
 if __name__ == "__main__":

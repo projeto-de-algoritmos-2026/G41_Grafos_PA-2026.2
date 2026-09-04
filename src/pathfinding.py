@@ -38,3 +38,33 @@ def dijkstra(
     if distances[goal] == float("inf"):
         return None, predecessors
     return int(distances[goal]), predecessors
+
+
+def reconstruct_path(
+    graph: GridGraph,
+    start: Position,
+    goal: Position,
+    predecessors: Predecessors,
+) -> tuple[list[Position], int | None]:
+    """Reconstrói o caminho e recalcula seu custo a partir dos predecessores."""
+    if start not in predecessors or goal not in predecessors:
+        return [], None
+
+    reversed_path: list[Position] = []
+    current = goal
+    visited: set[Position] = set()
+
+    while current != start:
+        if current in visited or current not in predecessors:
+            return [], None
+        visited.add(current)
+        reversed_path.append(current)
+        predecessor = predecessors[current]
+        if predecessor is None:
+            return [], None
+        current = predecessor
+
+    reversed_path.append(start)
+    path = list(reversed(reversed_path))
+    total_cost = sum(graph.city.cell_at(*position).danger for position in path[1:])
+    return path, total_cost
