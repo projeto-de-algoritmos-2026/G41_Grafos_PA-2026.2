@@ -151,6 +151,15 @@ def advance_player(
     return path_index
 
 
+def route_summary(
+    path: list[tuple[int, int]],
+    path_cost: int | None,
+) -> tuple[str, str]:
+    if not path or path_cost is None:
+        return "Rota indisponivel", "Nenhum caminho encontrado"
+    return f"Custo da rota: {path_cost}", f"Passos: {len(path) - 1}"
+
+
 def draw_map(
     screen: pygame.Surface,
     city: CityMap,
@@ -174,7 +183,14 @@ def draw_map(
     player_center = (player[0] * TILE_SIZE + TILE_SIZE // 2, player[1] * TILE_SIZE + TILE_SIZE // 2)
     draw_player(screen, player_center)
 
-def draw_sidebar(screen: pygame.Surface, city: CityMap, title_font: pygame.font.Font, font: pygame.font.Font) -> None:
+def draw_sidebar(
+    screen: pygame.Surface,
+    city: CityMap,
+    title_font: pygame.font.Font,
+    font: pygame.font.Font,
+    path: list[tuple[int, int]],
+    path_cost: int | None,
+) -> None:
     left = MAP_WIDTH * TILE_SIZE
     pygame.draw.rect(screen, COLORS["panel"], (left, 0, SIDEBAR_WIDTH, WINDOW_HEIGHT))
     pygame.draw.line(screen, COLORS["grid"], (left, 0), (left, WINDOW_HEIGHT), 2)
@@ -187,7 +203,11 @@ def draw_sidebar(screen: pygame.Surface, city: CityMap, title_font: pygame.font.
     screen.blit(font.render("R  gerar nova cidade", True, COLORS["muted"]), (left + 22, y + 28))
     screen.blit(font.render("ESC  sair", True, COLORS["muted"]), (left + 22, y + 52))
 
-    y += 96
+    cost_text, steps_text = route_summary(path, path_cost)
+    screen.blit(font.render(cost_text, True, COLORS["text"]), (left + 22, y + 80))
+    screen.blit(font.render(steps_text, True, COLORS["muted"]), (left + 22, y + 106))
+
+    y += 120
     screen.blit(title_font.render("Personagens", True, COLORS["text"]), (left + 22, y))
     draw_player(screen, (left + 30, y + 35))
     screen.blit(font.render("Sobrevivente", True, COLORS["text"]), (left + 54, y + 27))
@@ -249,7 +269,7 @@ def main() -> None:
 
         screen.fill(COLORS["background"])
         draw_map(screen, city, font, path)
-        draw_sidebar(screen, city, title_font, font)
+        draw_sidebar(screen, city, title_font, font, path, path_cost)
         pygame.display.flip()
 
     pygame.quit()

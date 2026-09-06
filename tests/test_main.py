@@ -10,7 +10,7 @@ sys.path.insert(0, str(SRC_DIR))
 
 import pygame
 
-from main import COLORS, advance_player, draw_path
+from main import COLORS, advance_player, draw_path, route_summary
 from pathfinding import find_route_to_shelter
 from world import CityMap
 
@@ -51,6 +51,31 @@ class PlayerMovementTest(unittest.TestCase):
         final_index = advance_player(city, path, path_index)
         self.assertEqual(final_index, path_index)
         self.assertEqual(city.player_position, path[-1])
+
+
+class RouteSummaryTest(unittest.TestCase):
+    def test_summary_uses_dijkstra_cost_and_path_steps(self) -> None:
+        city = CityMap(5, 5, seed=7)
+        path, path_cost = find_route_to_shelter(city)
+
+        cost_text, steps_text = route_summary(path, path_cost)
+
+        self.assertEqual(cost_text, f"Custo da rota: {path_cost}")
+        self.assertEqual(steps_text, f"Passos: {len(path) - 1}")
+
+    def test_summary_reports_missing_route(self) -> None:
+        self.assertEqual(
+            route_summary([], None),
+            ("Rota indisponivel", "Nenhum caminho encontrado"),
+        )
+
+    def test_different_maps_can_have_different_route_costs(self) -> None:
+        route_costs = {
+            find_route_to_shelter(CityMap(5, 5, seed=seed))[1]
+            for seed in (1, 2, 3, 4, 5)
+        }
+
+        self.assertGreater(len(route_costs), 1)
 
 
 if __name__ == "__main__":
