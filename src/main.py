@@ -21,6 +21,7 @@ COLORS = {
     "text": (232, 236, 228),
     "muted": (157, 166, 165),
     "grid": (45, 52, 57),
+    "route": (74, 224, 209),
 }
 
 
@@ -122,13 +123,34 @@ def draw_zombie(screen: pygame.Surface, center: tuple[int, int]) -> None:
     pygame.draw.line(screen, outline, (x + 3, y + 7), (x + 5, y + 12), 2)
 
 
-def draw_map(screen: pygame.Surface, city: CityMap, font: pygame.font.Font) -> None:
+def draw_path(screen: pygame.Surface, path: list[tuple[int, int]]) -> None:
+    centers = [
+        (x * TILE_SIZE + TILE_SIZE // 2, y * TILE_SIZE + TILE_SIZE // 2)
+        for x, y in path
+    ]
+    if not centers:
+        return
+
+    if len(centers) > 1:
+        pygame.draw.lines(screen, COLORS["route"], False, centers, 5)
+    for center in centers:
+        pygame.draw.circle(screen, COLORS["route"], center, 5)
+
+
+def draw_map(
+    screen: pygame.Surface,
+    city: CityMap,
+    font: pygame.font.Font,
+    path: list[tuple[int, int]],
+) -> None:
     for cell in city.cells:
         rectangle = pygame.Rect(cell.x * TILE_SIZE, cell.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         pygame.draw.rect(screen, cell.terrain.color, rectangle)
         pygame.draw.rect(screen, COLORS["grid"], rectangle, 1)
 
         draw_cartoon_icon(screen, cell, rectangle)
+
+    draw_path(screen, path)
 
     for zombie in city.zombies:
         zombie_center = (zombie.x * TILE_SIZE + TILE_SIZE // 2, zombie.y * TILE_SIZE + TILE_SIZE // 2)
@@ -203,7 +225,7 @@ def main() -> None:
                     path, path_cost = find_route_to_shelter(city)
 
         screen.fill(COLORS["background"])
-        draw_map(screen, city, font)
+        draw_map(screen, city, font, path)
         draw_sidebar(screen, city, title_font, font)
         pygame.display.flip()
         clock.tick(60)
