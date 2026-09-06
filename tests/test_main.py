@@ -10,7 +10,9 @@ sys.path.insert(0, str(SRC_DIR))
 
 import pygame
 
-from main import COLORS, draw_path
+from main import COLORS, advance_player, draw_path
+from pathfinding import find_route_to_shelter
+from world import CityMap
 
 
 class DrawPathTest(unittest.TestCase):
@@ -33,6 +35,22 @@ class DrawPathTest(unittest.TestCase):
         draw_path(self.screen, [])
 
         self.assertEqual(self.screen.get_at((16, 16))[:3], (0, 0, 0))
+
+
+class PlayerMovementTest(unittest.TestCase):
+    def test_player_follows_every_route_point_until_shelter(self) -> None:
+        city = CityMap(5, 5, seed=7)
+        path, _ = find_route_to_shelter(city)
+        path_index = 0
+
+        for expected_position in path[1:]:
+            path_index = advance_player(city, path, path_index)
+            self.assertEqual(city.player_position, expected_position)
+
+        self.assertEqual(city.player_position, path[-1])
+        final_index = advance_player(city, path, path_index)
+        self.assertEqual(final_index, path_index)
+        self.assertEqual(city.player_position, path[-1])
 
 
 if __name__ == "__main__":

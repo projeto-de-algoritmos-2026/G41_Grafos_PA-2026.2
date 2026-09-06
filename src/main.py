@@ -13,6 +13,7 @@ TILE_SIZE = 32
 MAP_WIDTH = 25
 MAP_HEIGHT = 17
 SIDEBAR_WIDTH = WINDOW_WIDTH - MAP_WIDTH * TILE_SIZE
+MOVE_INTERVAL_MS = 300
 
 
 COLORS = {
@@ -137,6 +138,19 @@ def draw_path(screen: pygame.Surface, path: list[tuple[int, int]]) -> None:
         pygame.draw.circle(screen, COLORS["route"], center, 5)
 
 
+def advance_player(
+    city: CityMap,
+    path: list[tuple[int, int]],
+    path_index: int,
+) -> int:
+    if path_index >= len(path) - 1:
+        return path_index
+
+    path_index += 1
+    city.player_position = path[path_index]
+    return path_index
+
+
 def draw_map(
     screen: pygame.Surface,
     city: CityMap,
@@ -211,6 +225,8 @@ def main() -> None:
     font = pygame.font.Font(None, 21)
     city = CityMap(MAP_WIDTH, MAP_HEIGHT)
     path, path_cost = find_route_to_shelter(city)
+    path_index = 0
+    move_elapsed_ms = 0
 
     running = True
     while running:
@@ -223,12 +239,18 @@ def main() -> None:
                 elif event.key == pygame.K_r:
                     city.regenerate()
                     path, path_cost = find_route_to_shelter(city)
+                    path_index = 0
+                    move_elapsed_ms = 0
+
+        move_elapsed_ms += clock.tick(60)
+        while move_elapsed_ms >= MOVE_INTERVAL_MS:
+            path_index = advance_player(city, path, path_index)
+            move_elapsed_ms -= MOVE_INTERVAL_MS
 
         screen.fill(COLORS["background"])
         draw_map(screen, city, font, path)
         draw_sidebar(screen, city, title_font, font)
         pygame.display.flip()
-        clock.tick(60)
 
     pygame.quit()
     sys.exit()
