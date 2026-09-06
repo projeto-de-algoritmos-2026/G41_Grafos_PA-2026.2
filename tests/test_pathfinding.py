@@ -11,6 +11,14 @@ from pathfinding import dijkstra, find_route_to_shelter, reconstruct_path
 from world import CityMap
 
 
+class DisconnectedGraph:
+    def nodes(self):
+        return [(0, 0), (1, 0)]
+
+    def neighbors(self, position):
+        return []
+
+
 class DijkstraTest(unittest.TestCase):
     def setUp(self) -> None:
         self.city = CityMap(3, 3, seed=123456)
@@ -25,6 +33,16 @@ class DijkstraTest(unittest.TestCase):
         self.assertEqual(predecessors[(0, 0)], None)
         self.assertIn((2, 2), predecessors)
 
+    def test_finds_path_on_simple_map_without_obstacles(self) -> None:
+        simple_city = CityMap(1, 3, seed=1)
+        for cell in simple_city.cells:
+            cell.danger = 1
+
+        cost, predecessors = dijkstra(GridGraph(simple_city), (0, 0), (0, 2))
+
+        self.assertEqual(cost, 2)
+        self.assertEqual(predecessors[(0, 2)], (0, 1))
+
     def test_prefers_lower_danger_over_shorter_distance(self) -> None:
         self.city.cell_at(1, 0).danger = 100
 
@@ -38,6 +56,22 @@ class DijkstraTest(unittest.TestCase):
 
         self.assertIsNone(cost)
         self.assertEqual(predecessors, {})
+
+    def test_origin_equal_to_destination_has_zero_cost(self) -> None:
+        cost, predecessors = dijkstra(self.graph, (1, 1), (1, 1))
+        path, total_cost = reconstruct_path(
+            self.graph, (1, 1), (1, 1), predecessors
+        )
+
+        self.assertEqual(cost, 0)
+        self.assertEqual(path, [(1, 1)])
+        self.assertEqual(total_cost, 0)
+
+    def test_returns_no_path_when_graph_is_disconnected(self) -> None:
+        cost, predecessors = dijkstra(DisconnectedGraph(), (0, 0), (1, 0))
+
+        self.assertIsNone(cost)
+        self.assertEqual(predecessors, {(0, 0): None})
 
     def test_reconstructs_path_from_start_to_goal(self) -> None:
         cost, predecessors = dijkstra(self.graph, (0, 0), (2, 0))
@@ -84,6 +118,20 @@ class DijkstraTest(unittest.TestCase):
             routes.append(tuple(path))
 
         self.assertGreater(len(set(routes)), 1)
+
+    def test_regeneration_uses_a_different_seed(self) -> None:
+        city = CityMap(5, 5, seed=1)
+        first_seed = city.seed
+        first_path, first_cost = find_route_to_shelter(city)
+
+        city.regenerate()
+        second_path, second_cost = find_route_to_shelter(city)
+
+        self.assertNotEqual(city.seed, first_seed)
+        self.assertTrue(first_path)
+        self.assertIsNotNone(first_cost)
+        self.assertTrue(second_path)
+        self.assertIsNotNone(second_cost)
 
 
 if __name__ == "__main__":
